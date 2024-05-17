@@ -35,16 +35,23 @@ class VoiceAssistant:
         self.tts_device = "cuda"
         self.tts_compute_type = "float32"
         print("Model stuff....\n")
-        self.model = WhisperModel("medium", device=self.tts_device, compute_type=self.tts_compute_type)
+        # Comment out for testing
+        # self.model = WhisperModel("medium", device=self.tts_device, compute_type=self.tts_compute_type)
         print("Model stuff done!\n")
 
     def stop(self):
         self.stop_all = True
         # self.py_audio.terminate()
 
-    def start(self):
+    def start(self, microphone_id):
         self.stop_all = False
+        if microphone_id:
+            self.input_device_index = microphone_id
+            print(self.input_device_index)
         self.py_audio = pyaudio.PyAudio()
+        for i in range(self.py_audio.get_device_count()):
+            print(self.py_audio.get_device_info_by_index(i))
+            print(self.py_audio.get_device_info_by_index(i)["defaultSampleRate"])
         self.main()
 
     def bitstream_to_wave(self, frames, path):
@@ -73,10 +80,12 @@ class VoiceAssistant:
 
     def main(self):
         self.stop_all = False
-        stream = self.py_audio.open(format=pyaudio.paInt16, channels=1, rate=16000,
-                                    input_device_index=int(self.input_device_index), input=True, frames_per_buffer=1024)
+        stream = ""
         log = ""
         try:
+            stream = self.py_audio.open(format=pyaudio.paInt16, channels=1, rate=16000,
+                                        input_device_index=int(self.input_device_index), input=True,
+                                        frames_per_buffer=1024)
             while not self.stop_all:
                 if check_volume(stream.read(1024)) > 1000:
                     self.recording(stream)
@@ -99,15 +108,22 @@ class VoiceAssistant:
                     print("Procession Time: ")
                     print(deltatime)
                     os.remove(self.temp_audio_file_path)
+        except OSError:
+            # Zu einer Pop Up Message machen
+            print("Error. Starting Input Device Failed. Choose a valid microphone.\n"
+                  "This error can be cause by missing permissions.\n"
+                  "Check your microphone's privacy settings.")
+            self.owner.va_on_off = False
         except Exception:
             with open("temp/log.txt", "w") as log_file:
                 log_file.write(log)
+            self.owner.va_on_off = False
         finally:
             print("Stopping...")
             print("LOG: " + log)
-            stream.stop_stream()
-            stream.close()
-            # self.py_audio.terminate()
+            if stream:
+                stream.stop_stream()
+                stream.close()
 
 # if __name__ == '__main__':
 #     print("Start")

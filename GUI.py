@@ -6,17 +6,19 @@ import subprocess
 from Microphone_Selection import MicrophoneWindow
 from Voice_Assistant import VoiceAssistant
 import pyaudio
+import Editor_Commands as e
 
 
 class MainGUI(tkinter.Tk):
     def process_va_data(self, data):
         print(data)
+
     def __init__(self):
         tkinter.Tk.__init__(self)
         self.file_path = ""
         self.process = ''
         self.py_audio = None
-        self.microphone_data = ''
+        self.microphone_data = ""
         self.connected_devices = {}
         self.va_on_off = False
         self.va = VoiceAssistant(owner=self)
@@ -24,15 +26,17 @@ class MainGUI(tkinter.Tk):
         def voice_assistant():
             if not self.va_on_off:
                 print("Voice Assistant is now ON")
-                t = threading.Thread(target=self.va.start)
+                index = 0
+                if self.microphone_data and self.connected_devices:
+                    index = self.connected_devices[self.microphone_data]
+                    print(f'choosen index = {index}')
+                t = threading.Thread(target=self.va.start, args=(index,))
                 t.daemon = True
                 t.start()
             else:
                 print("Voice Assistant is now OFF")
                 self.va.stop()
             self.va_on_off = not self.va_on_off
-
-
 
         def select_microphone():
             check_devices()
@@ -118,9 +122,27 @@ class MainGUI(tkinter.Tk):
 
         def stop():
             console.insert(END, "ToDo: Implement Stop\n")
+            print("__________________________________________")
+            # e.get_cursor_position(editor)
+            # get_editor_selected_text()
+            # jump_to_row("1")
+            # get_editor_cursor_row()
+            # editor_copy("1.56", "2")
+            # editor_copy()
+            # editor_paste()
+            # editor_delete("2")
+            # e.editor_delete(editor)
+            # e.get_editor_cursor_position(editor)
+            # e.get_editor_selected_text(editor)
+            # e.jump_to_row(editor,"3")
+            # e.get_editor_cursor_row(editor)
+            # e.editor_copy(editor, "1.56", "2")
+            e.insert_if_statement(editor)
+            # e.check_for_function("#function optimized to run on gpu def func(a):")
+            # e.remove_comment("function# optimized to run on gpu def func(a):  to measure exec time from timeit import default_timer as timer     a = np.ones(n, dtype = np.float64)iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiillllllllllllllllllllllIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII'''")
+
 
         menu_bar = Menu(self)
-
         file_bar = Menu(menu_bar, tearoff=0)
         file_bar.add_command(label="New", command=new_file)
         file_bar.add_command(label="Open", command=open_file)

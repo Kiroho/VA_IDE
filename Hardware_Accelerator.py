@@ -16,7 +16,6 @@ class MicrophoneWindow(Toplevel):
             self.destroy()
 
         def on_cancel():
-            self.master.microphone_data = ""
             self.destroy()
 
         device_list = Listbox(self)
