@@ -1,3 +1,4 @@
+import os
 import threading
 import tkinter
 from tkinter import *
@@ -9,6 +10,7 @@ import pyaudio
 import Editor_Commands as e
 
 
+
 class MainGUI(tkinter.Tk):
     def process_va_data(self, data):
         print(data)
@@ -16,12 +18,13 @@ class MainGUI(tkinter.Tk):
     def __init__(self):
         tkinter.Tk.__init__(self)
         self.file_path = ""
-        self.process = ''
+        self.process = None
         self.py_audio = None
         self.microphone_data = ""
         self.connected_devices = {}
         self.va_on_off = False
         self.va = VoiceAssistant(owner=self)
+
 
         def voice_assistant():
             if not self.va_on_off:
@@ -103,6 +106,19 @@ class MainGUI(tkinter.Tk):
                     file.write(code)
                     set_file_path(path)
 
+        def read_output():
+            while self.process.poll() is None:
+                out = self.process.stdout.readline().strip()
+                if out:
+                    console.insert(END, out.decode().strip() + "\n")
+                    console.see(END)
+                    print(out)
+
+                err = self.process.stderr.readline().strip()
+                if err:
+                    console.insert(END, err.decode().strip() + "\n")
+                    console.see(END)
+                    print(err)
         def run():
             t = threading.Thread(target=run_code)
             t.daemon = True
@@ -110,15 +126,17 @@ class MainGUI(tkinter.Tk):
 
         def run_code():
             save()
-            global process
             # command = f'python{file_path}'
-            process = subprocess.Popen(self.file_path, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-            output, error = process.communicate()
-            console.insert(END, output)
-            console.insert(END, error)
-            print(output)
-            print(error)
-            print(self.file_path)
+            self.process = subprocess.Popen(self.file_path, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+            # output, error = self.process.communicate()
+            # console.insert(END, output.decode('utf-8'))
+            # console.insert(END, error.decode('utf-8'))
+            # print(output)
+            # print(error)
+            # print(self.file_path)
+            o = threading.Thread(target=read_output)
+            o.daemon = True
+            o.start()
 
         def stop():
             console.insert(END, "ToDo: Implement Stop\n")
@@ -137,9 +155,13 @@ class MainGUI(tkinter.Tk):
             # e.jump_to_row(editor,"3")
             # e.get_editor_cursor_row(editor)
             # e.editor_copy(editor, "1.56", "2")
-            e.insert_if_statement(editor)
-            # e.check_for_function("#function optimized to run on gpu def func(a):")
-            # e.remove_comment("function# optimized to run on gpu def func(a):  to measure exec time from timeit import default_timer as timer     a = np.ones(n, dtype = np.float64)iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiillllllllllllllllllllllIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII'''")
+            # e.insert_if_statement(editor)
+            # e.insert_while(editor, x="a", y="3", o="<=")
+            # e.insert_match(editor, "x", "y", "z", row=None, status="text")
+            # e.insert_try(editor, excep="ValueError", final=True)
+            # e.insert_infinite_loop(editor)
+            # e.insert_print(editor, text="hallo, wie gehts?")
+            e.insert_input(editor)
 
 
         menu_bar = Menu(self)
@@ -162,12 +184,34 @@ class MainGUI(tkinter.Tk):
 
         self.config(menu=menu_bar)
 
-        editor = Text()
+        editor_scrollbar = Scrollbar(orient="horizontal")
+
+
+        editor = Text(wrap=NONE, xscrollcommand=editor_scrollbar.set)
         editor.pack()
 
-        console = Text(height=10)
+        editor_scrollbar.pack(fill='x')
+        editor_scrollbar.config(command=editor.xview)
+
+        console_input = Entry(background="#fefefe")
+        console_input.pack(fill='x')
+
+        console = Text(height=7, background="#fafafa")
         console.pack()
 
+        def editor_input_send(event=None):
+            content = console_input.get()
+            # console.insert(END, content)
+            if self.process:
+                o = threading.Thread(target=input_def(content))
+                o.daemon = True
+                o.start()
+            console_input.delete(0, END)
+        console_input.bind('<Return>', editor_input_send)
+
+        def input_def(content):
+            self.process.stdin.write(bytes(content + '\n', 'utf-8'))
+            self.process.stdin.flush()
 
 def main():
     MainGUI().mainloop()

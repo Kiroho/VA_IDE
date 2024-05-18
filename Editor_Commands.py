@@ -145,12 +145,8 @@ def check_for_function(text):
 
 
 def formate_function(editor, row, function_text):
-    if row and isinstance(row, str):
-        val = row.split(".")[0] + ".0"
-        print("yay")
-    else:
-        val = get_cursor_position(editor)
-        print(f'val: {val}')
+    val = adjust_row(editor, row=row)
+
     prev_row = get_previous_row(val)
     prev_row_text = editor.get(prev_row + " linestart", prev_row + " lineend")
     text = function_text + "\n\t"
@@ -160,6 +156,21 @@ def formate_function(editor, row, function_text):
         text = "\t" + text + "\t"
     if check_for_function(prev_row_text):
         text = "\t" + text + "\t"
+    text = "\n" + text
+    return text
+
+def formate_non_function(editor, row, text):
+    val = adjust_row(editor, row=row)
+
+    prev_row = get_previous_row(val)
+    prev_row_text = editor.get(prev_row + " linestart", prev_row + " lineend")
+    text = text
+    tabs_prev = check_tabs(editor, prev_row)
+    print(f'tabs_prev: {tabs_prev}')
+    for i in range(0, tabs_prev):
+        text = "\t" + text
+    if check_for_function(prev_row_text):
+        text = "\t" + text
     text = "\n" + text
     return text
 
@@ -180,24 +191,25 @@ def insert_loop(editor, row=None, range_s="1", range_e=None, range_o=None, in_ea
 
     command = "for i in range(" + range_s + "):"
     if in_each:
-        in_each = 0  # for each loop
+        command = "for i in " + in_each + ":"
     elif range_e:
-        range_e = 0  # in range zwei Attribute
+        command = "for i in range(" + range_s + ", " + range_e + "):"
         if range_o:
-            range_o = 0  # in range drei Attribute
-
+            command = "for i in range(" + range_s + ", " + range_e + ", " + range_o + "):"
     command = formate_function(editor, row, command)
     editor.insert(val + " lineend", command)
 
 
-def insert_while(editor, row=None, is_not="", x="x", y="y", o="=="):
+def insert_while(editor, row=None, is_not=False, x="x", y="y", o="=="):
     val = adjust_row(editor, row)
-    command = "while " + is_not + " " + x + o + y + ":"
+    command = "while " + x + o + y + ":"
+    if is_not:
+        command = "while not " + x + o + y + ":"
     command = formate_function(editor, row, command)
     editor.insert(val + " lineend", command)
 
 
-def insert_match(editor, row=None, status="status", *args):
+def insert_match(editor, *args, row=None, status="status"):
     val = adjust_row(editor, row)
 
     command = "match " + status + ":"
@@ -207,12 +219,12 @@ def insert_match(editor, row=None, status="status", *args):
         case_command = formate_function(editor, row, case_command)
         command = command + case_command
     end_command = "case _:"
-    end_command = formate_function(editor, row, command)
+    end_command = formate_function(editor, row, end_command)
     command = command + end_command
     editor.insert(val + " lineend", command)
 
 
-def insert_try(editor, row=None, excep="Exception"):
+def insert_try(editor, row=None, excep="Exception", final=False):
     val = adjust_row(editor, row)
 
     command = "try:"
@@ -220,9 +232,10 @@ def insert_try(editor, row=None, excep="Exception"):
     excep_command = "except " + excep + ":"
     excep_command = formate_function(editor, row, excep_command)
     command = command + excep_command
-    final_command = "finally:"
-    final_command = formate_function(editor, row, final_command)
-    command = command + final_command
+    if final:
+        final_command = "finally:"
+        final_command = formate_function(editor, row, final_command)
+        command = command + final_command
     editor.insert(val + " lineend", command)
 
 
@@ -236,18 +249,18 @@ def insert_infinite_loop(editor, row=None, excep="Exception"):
 def insert_print(editor, row=None, text="Hello World"):
     val = adjust_row(editor, row)
     command = "print(\"" + text + "\")"
-    command = formate_function(editor, row, command)
+    command = formate_non_function(editor, row, command)
     editor.insert(val + " lineend", command)
 
-def insert_input(editor, row=None, variable="input_val", text="Input:"):
+def insert_input(editor, row=None, variable="input_val", text="Input: "):
     val = adjust_row(editor, row)
     command = variable + " = input(\"" + text + "\")"
-    command = formate_function(editor, row, command)
+    command = formate_non_function(editor, row, command)
     editor.insert(val + " lineend", command)
 
 
 
-def adjust_row(editor, row):    #Testen
+def adjust_row(editor, row):
     if row and isinstance(row, str):
         val = row.split(".")[0] + ".0"
         print("yay")
