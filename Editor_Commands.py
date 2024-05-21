@@ -1,7 +1,7 @@
 from tkinter import *
 
 import numpy as np
-from timeit import default_timer as timer
+from random import randrange
 
 
 def get_cursor_position(editor):
@@ -117,7 +117,6 @@ def get_previous_row(row):
 
 def remove_comment(text):
     text_array = np.fromiter(text, (np.str_, 1))
-    start = timer()
     print(f'Text Array size: {text_array.size}')
     for c in range(len(text_array) - 1, -1, -1):
         if text_array[c] == "#":
@@ -125,7 +124,6 @@ def remove_comment(text):
             text_array = text_array[0:c]
             print(f'New Array: {text_array}')
             break
-    print(f'time: {timer() - start}')
     return text_array
 
 
@@ -239,7 +237,7 @@ def insert_try(editor, row=None, excep="Exception", final=False):
     editor.insert(val + " lineend", command)
 
 
-def insert_infinite_loop(editor, row=None, excep="Exception"):
+def insert_infinite_loop(editor, row=None,):
     val = adjust_row(editor, row)
     command = "while True:"
     command = formate_function(editor, row, command)
@@ -258,8 +256,55 @@ def insert_input(editor, row=None, variable="input_val", text="Input: "):
     command = formate_non_function(editor, row, command)
     editor.insert(val + " lineend", command)
 
+def insert_timer(editor, row=None):
+    if not check_import(editor, "from timeit import default_timer as timer"):
+        editor.insert("0.0", "from timeit import default_timer as timer\n")
+    val = adjust_row(editor, row)
+    number = randrange(1, 1000)
+    command = "my_timer_" + str(number) + " = timer()\t\t#starts the timer"
+    command = formate_non_function(editor, row, command)
+    command_2 = "print(f\'time: {timer() - my_timer_" + str(number) + "}\')\t\t#stops the timer and prints the time"
+    command_2 = formate_non_function(editor, row, command_2)
+    command = command + command_2
+    editor.insert(val + " lineend", command)
+
+def insert_thread(editor, row=None, target="insert_function"):
+    if not check_import(editor, "import threading"):
+        editor.insert("0.0", "import threading\n")
+    val = adjust_row(editor, row)
+    number = randrange(1, 1000)
+
+    command = "my_thread_" + str(number) + " = threading.Thread(target=" + target + ")\t\t#initializes the thread"
+    command = formate_non_function(editor, row, command)
+
+    command_2 = "my_thread_" + str(number) + ".daemon = True\t\t#kills the thread automatically once the main program get closed"
+    command_2 = formate_non_function(editor, row, command_2)
+
+    command_3 = "my_thread_" + str(number) + ".start()\t\t#starts the thread"
+    command_3 = formate_non_function(editor, row, command_3)
+
+    command = command + command_2 + command_3
+
+    editor.insert(val + " lineend", command)
 
 
+
+def check_import(editor, wanted_import):
+    text = get_imports(editor)
+    for imports in text:
+        if wanted_import in imports:
+            print(text)
+            return True
+    return False
+
+
+def get_imports(editor):
+    imports = []
+    for row in editor.get(0.0, END).split("\n"):
+        row = row.replace("\t", "")
+        if row.startswith("import") or row.startswith("from"):
+            imports.append(row)
+    return imports
 def adjust_row(editor, row):
     if row and isinstance(row, str):
         val = row.split(".")[0] + ".0"

@@ -1,0 +1,30 @@
+Jump to = ["navigiere", "wegehre", "kavigiere", "verrigiere", "regiere", "karriere", "springe", "bring", "dringend", "bringe", "ringe", "klinge"]
+
+kopieren = ["kopiere", "pire", "piere", "vierer", "viere"]
+
+einfügen = ["einfügen", "züge", "kluge", "zuge", "schüge", "reinfügen", "einführung", "füge"]
+
+lösche = ["schütt", "schütz", "lösche", "entferne", "ferne", "fernezeile", "fernzeile", "fernteile", "fernseile"]
+
+if_anweisung = ["if-anweisung", "if", "anweisung", "abfrage", "hilfeanweisung", "elf-anweisung", "stiftanweisung", "veranweisung", "if-option", "tiefabfrage", "if-abfragezeile", "abfragezeile"]
+
+for_schleife = ["Vorschleife", "vorschläfe", "vorschneife", "vorschrift", "Bohrschleife"]
+
+while_schleife = ["weilschleife", "wildschleife", "waldschleife", "whileschleife", "wireschraube", "weilschläufe", "wireschleife", "waltschleife"]
+
+switch_case = ["switch", "witch", "wich", "hitch", "match", "case"]
+
+exception = ["exception", "ausnahme", "final", "expression"]
+
+endlosschleife = ["endlosschleife", "endoschleife", "endlosschleifen", "endlosschleifer", "endlos", "infinity", "infinity loop"]
+
+timer = ["timer", "daima"]
+
+thread = ["thread", "wett", "thwett", "sweat"]
+
+print_list = ["print", "pründ", "trint", "kind", "printbefehl"]
+
+input_list = ["input", "eingabe"]
+
+
+zeile_correction = ["zeile", "teile", "teil", "silo", "seile", "seite", "zeit", "zelle", "saile"]

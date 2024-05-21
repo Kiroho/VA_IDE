@@ -1,14 +1,17 @@
 import os
+import signal
 import threading
+import time
 import tkinter
 from tkinter import *
+import tkinter.messagebox
 from tkinter.filedialog import asksaveasfilename, askopenfilename
 import subprocess
 from Microphone_Selection import MicrophoneWindow
 from Voice_Assistant import VoiceAssistant
 import pyaudio
 import Editor_Commands as e
-
+from timeit import default_timer as timer
 
 
 class MainGUI(tkinter.Tk):
@@ -24,7 +27,6 @@ class MainGUI(tkinter.Tk):
         self.connected_devices = {}
         self.va_on_off = False
         self.va = VoiceAssistant(owner=self)
-
 
         def voice_assistant():
             if not self.va_on_off:
@@ -108,17 +110,17 @@ class MainGUI(tkinter.Tk):
 
         def read_output():
             while self.process.poll() is None:
-                out = self.process.stdout.readline().strip()
-                if out:
-                    console.insert(END, out.decode().strip() + "\n")
-                    console.see(END)
-                    print(out)
+                for out in self.process.stdout:
+                    if out:
+                        console.insert(END, out.decode().strip() + "\n")
+                        console.see(END)
+                        print(out)
+                for err in self.process.stderr:
+                    if err:
+                        console.insert(END, err.decode().strip() + "\n", 'error')
+                        console.see(END)
+                        print(err)
 
-                err = self.process.stderr.readline().strip()
-                if err:
-                    console.insert(END, err.decode().strip() + "\n")
-                    console.see(END)
-                    print(err)
         def run():
             t = threading.Thread(target=run_code)
             t.daemon = True
@@ -127,7 +129,8 @@ class MainGUI(tkinter.Tk):
         def run_code():
             save()
             # command = f'python{file_path}'
-            self.process = subprocess.Popen(self.file_path, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+            self.process = subprocess.Popen(self.file_path, bufsize=0, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                            stderr=subprocess.PIPE, shell=True)
             # output, error = self.process.communicate()
             # console.insert(END, output.decode('utf-8'))
             # console.insert(END, error.decode('utf-8'))
@@ -140,7 +143,9 @@ class MainGUI(tkinter.Tk):
 
         def stop():
             console.insert(END, "ToDo: Implement Stop\n")
+            subprocess.Popen("taskkill /F /T /PID %i" % self.process.pid, shell=True)
             print("__________________________________________")
+            my_timer = timer()
             # e.get_cursor_position(editor)
             # get_editor_selected_text()
             # jump_to_row("1")
@@ -148,21 +153,31 @@ class MainGUI(tkinter.Tk):
             # editor_copy("1.56", "2")
             # editor_copy()
             # editor_paste()
-            # editor_delete("2")
+            # e.delete(editor)
             # e.editor_delete(editor)
             # e.get_editor_cursor_position(editor)
             # e.get_editor_selected_text(editor)
             # e.jump_to_row(editor,"3")
-            # e.get_editor_cursor_row(editor)
-            # e.editor_copy(editor, "1.56", "2")
+            # e.get_cursor_row(editor)
+            # e.copy(editor, "1.56", "2")
             # e.insert_if_statement(editor)
             # e.insert_while(editor, x="a", y="3", o="<=")
             # e.insert_match(editor, "x", "y", "z", row=None, status="text")
             # e.insert_try(editor, excep="ValueError", final=True)
             # e.insert_infinite_loop(editor)
             # e.insert_print(editor, text="hallo, wie gehts?")
-            e.insert_input(editor)
+            # e.insert_input(editor)
+            # e.insert_timer(editor)
+            # e.insert_thread(editor, target="my_cool_function")
 
+            print(f'Time: {timer() - my_timer}')
+
+        def pop_up_info():
+            img = PhotoImage()
+            info = Label(self, text="INFORMATION!", image=img, compound=CENTER, font=('', 12), bg='light green',
+                         width=self.winfo_width(), height=25)
+            info.place(relx=.5, rely=0.7, anchor=CENTER)
+            self.after(2000, info.destroy)
 
         menu_bar = Menu(self)
         file_bar = Menu(menu_bar, tearoff=0)
@@ -175,7 +190,7 @@ class MainGUI(tkinter.Tk):
 
         option_bar = Menu(menu_bar, tearoff=0)
         option_bar.add_command(label="Microphone", command=select_microphone)
-        option_bar.add_command(label="Hardware Acceleration")
+        option_bar.add_command(label="Hardware Acceleration", command=pop_up_info)
         menu_bar.add_cascade(label="Options", menu=option_bar)
 
         menu_bar.add_command(label="Run", command=run)
@@ -185,19 +200,19 @@ class MainGUI(tkinter.Tk):
         self.config(menu=menu_bar)
 
         editor_scrollbar = Scrollbar(orient="horizontal")
-
-
         editor = Text(wrap=NONE, xscrollcommand=editor_scrollbar.set)
-        editor.pack()
+        editor.pack(fill=BOTH, expand=True)
 
-        editor_scrollbar.pack(fill='x')
+        editor_scrollbar.pack(fill='x', expand=False)
         editor_scrollbar.config(command=editor.xview)
 
         console_input = Entry(background="#fefefe")
-        console_input.pack(fill='x')
+        console_input.pack(fill='x', expand=False)
 
         console = Text(height=7, background="#fafafa")
-        console.pack()
+        console.pack(fill='x', expand=False)
+        console.tag_config('error', foreground="red")
+
 
         def editor_input_send(event=None):
             content = console_input.get()
@@ -207,11 +222,17 @@ class MainGUI(tkinter.Tk):
                 o.daemon = True
                 o.start()
             console_input.delete(0, END)
+
         console_input.bind('<Return>', editor_input_send)
 
         def input_def(content):
-            self.process.stdin.write(bytes(content + '\n', 'utf-8'))
-            self.process.stdin.flush()
+            try:
+                self.process.stdin.write(bytes(content + '\n', 'utf-8'))
+                self.process.stdin.flush()
+                console.insert(END, content + "\n")
+            except OSError:
+                pass
+
 
 def main():
     MainGUI().mainloop()

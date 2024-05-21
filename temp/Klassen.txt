@@ -1,0 +1,26 @@
+Jump to: navigiere, wegehre, kavigiere, verrigiere, regiere, karriere, springe, bring, dringend, bringe, ringe, klinge, 
+
+Kopieren: kopiere, pire, piere, vierer, viere
+
+Einfügen: einfügen, züge, kluge, zuge, schüge, reinfügen, einführung, füge
+Lösche: schütt, schütz, lösche, entferne - ferne, fernezeile, fernzeile, fernteile, fernseile
+
+If-Anweisung, if-anweisung if, anweisung, abfrage, hilfeanweisung, elf-anweisung, stiftanweisung, veranweisung, if-option, tiefabfrage, if-abfragezeile, abfragezeile, 
+
+For-Schleife: Vorschleife, vorschläfe, vorschneife, vorschrift, Bohrschleife
+
+While-Schleife: weilschleife, wildschleife, waldschleife, whileschleife, wireschraube, weilschläufe, wireschleife, waltschleife, 
+
+Switch-Case: switch, witch, wich, hitch, match, case,
+
+Exception: exception, ausnahme, final, expression,
+
+Endlosschleife: endlosschleife, endoschleife, endlosschleifen, endlosschleifer, endlos, infinity, infinity loop, 
+
+Timer: timer, daima, 
+
+Thread: thread, wett, thwett, sweat, 
+
+Print: print, pründ, trint, kind, printbefehl
+
+Input: input, eingabe

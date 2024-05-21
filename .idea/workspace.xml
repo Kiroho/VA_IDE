@@ -4,10 +4,17 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="8e1cacb9-5e11-485c-acc1-077f87b5ad70" name="Changes" comment="Added Editor Commands">
+    <list default="true" id="8e1cacb9-5e11-485c-acc1-077f87b5ad70" name="Changes" comment="fixed input">
+      <change afterPath="$PROJECT_DIR$/Categorize.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/keywords_preprocessed.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/keywords_raw.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/temp/Klassen.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/temp/Verarbeitete Keywords.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Editor_Commands.py" beforeDir="false" afterPath="$PROJECT_DIR$/Editor_Commands.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/GUI.py" beforeDir="false" afterPath="$PROJECT_DIR$/GUI.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Voice_Assistant.py" beforeDir="false" afterPath="$PROJECT_DIR$/Voice_Assistant.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/temp/log.txt" beforeDir="false" afterPath="$PROJECT_DIR$/temp/log.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -47,19 +54,25 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Python.GUI.executor&quot;: &quot;Run&quot;,
-    &quot;Python.Microphone_Selection.executor&quot;: &quot;Run&quot;,
-    &quot;Python.Voice_Assistant.executor&quot;: &quot;Run&quot;,
-    &quot;Python.test.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
-    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;D:/Dokumente/Studium/Bachelorarbeit/_Code/Voice_Assisted_IDE&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.keymap&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Python.Categorize.executor": "Run",
+    "Python.GUI.executor": "Run",
+    "Python.Microphone_Selection.executor": "Run",
+    "Python.Voice_Assistant.executor": "Run",
+    "Python.test.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "git-widget-placeholder": "master",
+    "ignore.virus.scanning.warn.message": "true",
+    "last_opened_file_path": "D:/Dokumente/Studium/Bachelorarbeit/_Code/Voice_Assisted_IDE",
+    "settings.editor.selected.configurable": "preferences.keymap"
   }
-}</component>
+}]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="D:\Dokumente\Studium\Bachelorarbeit\_Code\Voice_Assisted_IDE" />
+    </key>
+  </component>
   <component name="RunManager">
     <configuration name="GUI" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="Voice_Assisted_IDE" />
@@ -161,7 +174,15 @@
       <option name="project" value="LOCAL" />
       <updated>1715924251011</updated>
     </task>
-    <option name="localTasksCounter" value="8" />
+    <task id="LOCAL-00008" summary="fixed input">
+      <option name="closed" value="true" />
+      <created>1716017294548</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1716017294548</updated>
+    </task>
+    <option name="localTasksCounter" value="9" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -171,6 +192,7 @@
     <MESSAGE value="Added Microphone option file" />
     <MESSAGE value="Added temp folder" />
     <MESSAGE value="Added Editor Commands" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added Editor Commands" />
+    <MESSAGE value="fixed input" />
+    <option name="LAST_COMMIT_MESSAGE" value="fixed input" />
   </component>
 </project>

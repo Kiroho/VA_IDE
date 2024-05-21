@@ -1,0 +1,30 @@
+Jump to = ['navigi', 'wegehr', 'kavigi', 'verrigi', 'regi', 'karri', 'spring', 'bring', 'dringend', 'ring', 'kling']
+
+Kopieren = ['kopi', 'pir', 'pier', 'vier']
+
+Einfügen = ['einfug', 'klug', 'zug', 'schug', 'reinfug', 'einfuhr', 'fug']
+
+Lösche = ['schutt', 'schutz', 'losch', 'entfern', 'fern', 'fernezeil', 'fernzeil']
+
+If-Anweisung = ['ifanweis', 'if', 'anweis', 'abfrag', 'hilfeanweis', 'elfanweis', 'stiftanweis', 'veranweis', 'ifoption', 'tiefabfrag', 'ifabfragezeil', 'abfragezeil']
+
+For-Schleife = ['vorschleif', 'vorschlaf', 'vorschneif', 'vorschrift', 'bohrschleif']
+
+While-Schleife = ['weilschleif', 'wildschleif', 'waldschleif', 'whileschleif', 'wireschraub', 'weilschlauf', 'wireschleif', 'waltschleif']
+
+Switch-Case = ['switch', 'witch', 'wich', 'hitch', 'match', 'cas']
+
+Exception = ['exception', 'ausnahm', 'final', 'expression']
+
+Endlosschleife = ['endoschleif', 'endlosschleif', 'endlos', 'infinity', 'infinity loop']
+
+Timer = ['tim', 'daima']
+
+Thread = ['thread', 'wett', 'thwett', 'sweat']
+
+Print = ['print', 'prund', 'trint', 'kind', 'printbefehl']
+
+Input = ['input', 'eingab']
+
+
+Zeile = ['zeil', 'teil', 'silo', 'seil', 'zeit', 'zell', 'sail']

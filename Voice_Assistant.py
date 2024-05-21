@@ -4,15 +4,12 @@ from faster_whisper import WhisperModel
 import pyaudio
 import wave
 import os
-import keyboard
 import time
 import audioop
-
-
+import Categorize as c
 def check_volume(data):
     rms = audioop.rms(data, 2)
     return rms
-
 
 class VoiceAssistant:
 
@@ -36,12 +33,11 @@ class VoiceAssistant:
         self.tts_compute_type = "float32"
         print("Model stuff....\n")
         # Comment out for testing
-        # self.model = WhisperModel("medium", device=self.tts_device, compute_type=self.tts_compute_type)
+        self.model = WhisperModel("medium", device=self.tts_device, compute_type=self.tts_compute_type)
         print("Model stuff done!\n")
 
     def stop(self):
         self.stop_all = True
-        # self.py_audio.terminate()
 
     def start(self, microphone_id):
         self.stop_all = False
@@ -49,9 +45,9 @@ class VoiceAssistant:
             self.input_device_index = microphone_id
             print(self.input_device_index)
         self.py_audio = pyaudio.PyAudio()
-        for i in range(self.py_audio.get_device_count()):
-            print(self.py_audio.get_device_info_by_index(i))
-            print(self.py_audio.get_device_info_by_index(i)["defaultSampleRate"])
+        # for i in range(self.py_audio.get_device_count()):
+        #     print(self.py_audio.get_device_info_by_index(i))
+        #     print(self.py_audio.get_device_info_by_index(i)["defaultSampleRate"])
         self.main()
 
     def bitstream_to_wave(self, frames, path):
@@ -96,7 +92,8 @@ class VoiceAssistant:
                     for segment in segments:
                         text += segment.text + " "
                         # print(segment.text)
-                    log += text
+                    c.classify_text(text)
+                    log += text + "\n"
                     print("processing done")
 
                     if self.owner:
@@ -115,12 +112,12 @@ class VoiceAssistant:
                   "Check your microphone's privacy settings.")
             self.owner.va_on_off = False
         except Exception:
-            with open("temp/log.txt", "w") as log_file:
-                log_file.write(log)
             self.owner.va_on_off = False
         finally:
             print("Stopping...")
             print("LOG: " + log)
+            with open("temp/log.txt", "w") as log_file:
+                log_file.write(log)
             if stream:
                 stream.stop_stream()
                 stream.close()
