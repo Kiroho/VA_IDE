@@ -7,30 +7,98 @@ from tkinter import *
 import tkinter.messagebox
 from tkinter.filedialog import asksaveasfilename, askopenfilename
 import subprocess
+
+from Hardware_Accelerator import HardwareWindow
 from Microphone_Selection import MicrophoneWindow
 from Voice_Assistant import VoiceAssistant
 import pyaudio
-import Editor_Commands as e
-from timeit import default_timer as timer
+import Categorize as c
+from tklinenums import TkLineNumbers
 
 
 class MainGUI(tkinter.Tk):
     def process_va_data(self, data):
         print(data)
+        c.classify_text(self, self.editor, data)
+
+    #info pop ups
+    def create_micro_on_info(self, text="", color="light green"):
+        img = PhotoImage()
+        self.micro = Label(master=self.editor, text=text, image=img, compound=LEFT,
+                           font=('', int(self.info_text_size / 3)),
+                           bg=color, width=self.editor.winfo_width(), height=int(self.info_height / 3))
+        self.micro.place(relx=0, y=int(self.editor.winfo_height() - ((self.info_height + 3) / 3)))
+
+    def stop_micro_on_info(self):
+        self.after(0, self.micro.destroy)
+
+    def create_recording_info(self, text="", color="light green"):
+        img = PhotoImage()
+        self.recording = Label(master=self.editor, text=text, image=img, compound=CENTER,
+                               font=('', self.info_text_size), bg=color,
+                               width=self.winfo_width(), height=self.info_height)
+        self.recording.place(relx=.5, y=int(self.editor.winfo_height() - self.info_height + 3), anchor=CENTER)
+
+    def stop_recording_info(self):
+        self.after(0, self.recording.destroy)
+
+    def create_processing_info(self, text="", color="yellow"):
+        img = PhotoImage()
+        self.processing = Label(master=self.editor, text=text, image=img, compound=CENTER,
+                                font=('', self.info_text_size), bg=color,
+                                width=self.winfo_width(), height=self.info_height)
+        self.processing.place(relx=.5, y=int(self.editor.winfo_height() - self.info_height + 3), anchor=CENTER)
+
+    def stop_processing_info(self):
+        self.after(0, self.processing.destroy)
+
+    def create_error_info(self, text="", color="red", timer=3000):
+        img = PhotoImage()
+        self.error = Label(master=self.editor, text=text, image=img, compound=CENTER, font=('', self.info_text_size),
+                           bg=color, width=self.winfo_width(), height=self.info_height)
+        self.error.place(relx=.5, y=int(self.editor.winfo_height() - self.info_height + 3), anchor=CENTER)
+        self.after(timer, self.error.destroy)
+
+    def set_hardware_accelerator(self):
+        if self.new_hardware_selected:
+            self.new_hardware_selected = False
+        self.va.stop()
+        self.va.tts_device = self.hardware_accelerator[0]
+        self.va.tts_compute_type = self.hardware_accelerator[1]
+        self.va.model = None
+        print("Voice Assistant is now OFF")
+        self.stop_micro_on_info()
+        self.va.stop()
+        self.va_on = False
+
+
 
     def __init__(self):
         tkinter.Tk.__init__(self)
+        self.info_text_size = 12
+        self.info_height = 14
+        self.error = Label()
+        self.recording = Label()
+        self.processing = Label()
+        self.micro = Label()
         self.file_path = ""
         self.process = None
         self.py_audio = None
         self.microphone_data = ""
         self.connected_devices = {}
-        self.va_on_off = False
-        self.va = VoiceAssistant(owner=self)
+        self.hardware_accelerator = ["cuda", "float32"]
+        self.new_hardware_selected = False
+        self.va_on = False
+        self.va = None
 
         def voice_assistant():
-            if not self.va_on_off:
+            if not self.va:
+                self.va = VoiceAssistant(owner=self,
+                                         tts_device=self.hardware_accelerator[0],
+                                         tts_compute_type=self.hardware_accelerator[1])
+            if not self.va_on:
                 print("Voice Assistant is now ON")
+                self.create_micro_on_info()
                 index = 0
                 if self.microphone_data and self.connected_devices:
                     index = self.connected_devices[self.microphone_data]
@@ -40,8 +108,13 @@ class MainGUI(tkinter.Tk):
                 t.start()
             else:
                 print("Voice Assistant is now OFF")
+                self.stop_micro_on_info()
                 self.va.stop()
-            self.va_on_off = not self.va_on_off
+            self.va_on = not self.va_on
+
+        def select_hardware_accelerator():
+            HardwareWindow(self)
+
 
         def select_microphone():
             check_devices()
@@ -60,7 +133,7 @@ class MainGUI(tkinter.Tk):
                 device_info = self.py_audio.get_device_info_by_index(i)
                 # Check if this device is a microphone (an input device)
                 if device_info.get('maxInputChannels') > 0:
-                    # print(f"Microphone: {device_info.get('name')} , Device Index: {device_info.get('index')}")
+                    print(f"Microphone: {device_info.get('name')} , Device Index: {device_info.get('index')}")
                     self.connected_devices[device_info.get('name')] = device_info.get('index')
             # print("\n\n\n")
             # print(self.connected_devices)
@@ -70,7 +143,7 @@ class MainGUI(tkinter.Tk):
 
         def new_file():
             set_file_path("")
-            editor.delete("1.0", END)
+            self.editor.delete("1.0", END)
             console.delete("1.0", END)
 
         def open_file():
@@ -78,8 +151,8 @@ class MainGUI(tkinter.Tk):
             if path.endswith('py'):
                 with (open(path, 'r') as file):
                     code = file.read()
-                    editor.delete("1.0", END)
-                    editor.insert("1.0", code)
+                    self.editor.delete("1.0", END)
+                    self.editor.insert("1.0", code)
                     console.delete("1.0", END)
                     set_file_path(path)
             else:
@@ -91,7 +164,7 @@ class MainGUI(tkinter.Tk):
                 path += '.py'
             if not path == '':
                 with open(path, 'w') as file:
-                    code = editor.get("1.0", END)
+                    code = self.editor.get("1.0", END)
                     file.write(code)
                     set_file_path(path)
 
@@ -104,7 +177,7 @@ class MainGUI(tkinter.Tk):
                 path = self.file_path
             if not path == '':
                 with open(path, 'w') as file:
-                    code = editor.get("1.0", END)
+                    code = self.editor.get("1.0", END)
                     file.write(code)
                     set_file_path(path)
 
@@ -145,39 +218,6 @@ class MainGUI(tkinter.Tk):
             console.insert(END, "ToDo: Implement Stop\n")
             subprocess.Popen("taskkill /F /T /PID %i" % self.process.pid, shell=True)
             print("__________________________________________")
-            my_timer = timer()
-            # e.get_cursor_position(editor)
-            # get_editor_selected_text()
-            # jump_to_row("1")
-            # get_editor_cursor_row()
-            # editor_copy("1.56", "2")
-            # editor_copy()
-            # editor_paste()
-            # e.delete(editor)
-            # e.editor_delete(editor)
-            # e.get_editor_cursor_position(editor)
-            # e.get_editor_selected_text(editor)
-            # e.jump_to_row(editor,"3")
-            # e.get_cursor_row(editor)
-            # e.copy(editor, "1.56", "2")
-            # e.insert_if_statement(editor)
-            # e.insert_while(editor, x="a", y="3", o="<=")
-            # e.insert_match(editor, "x", "y", "z", row=None, status="text")
-            # e.insert_try(editor, excep="ValueError", final=True)
-            # e.insert_infinite_loop(editor)
-            # e.insert_print(editor, text="hallo, wie gehts?")
-            # e.insert_input(editor)
-            # e.insert_timer(editor)
-            # e.insert_thread(editor, target="my_cool_function")
-
-            print(f'Time: {timer() - my_timer}')
-
-        def pop_up_info():
-            img = PhotoImage()
-            info = Label(self, text="INFORMATION!", image=img, compound=CENTER, font=('', 12), bg='light green',
-                         width=self.winfo_width(), height=25)
-            info.place(relx=.5, rely=0.7, anchor=CENTER)
-            self.after(2000, info.destroy)
 
         menu_bar = Menu(self)
         file_bar = Menu(menu_bar, tearoff=0)
@@ -190,7 +230,7 @@ class MainGUI(tkinter.Tk):
 
         option_bar = Menu(menu_bar, tearoff=0)
         option_bar.add_command(label="Microphone", command=select_microphone)
-        option_bar.add_command(label="Hardware Acceleration", command=pop_up_info)
+        option_bar.add_command(label="Hardware Acceleration", command=select_hardware_accelerator)
         menu_bar.add_cascade(label="Options", menu=option_bar)
 
         menu_bar.add_command(label="Run", command=run)
@@ -199,12 +239,21 @@ class MainGUI(tkinter.Tk):
 
         self.config(menu=menu_bar)
 
-        editor_scrollbar = Scrollbar(orient="horizontal")
-        editor = Text(wrap=NONE, xscrollcommand=editor_scrollbar.set)
-        editor.pack(fill=BOTH, expand=True)
+        self.editor_frame = Frame()
+        self.editor_frame.pack(side="top", fill="both", expand=True)
 
-        editor_scrollbar.pack(fill='x', expand=False)
-        editor_scrollbar.config(command=editor.xview)
+        self.editor_scrollbar = Scrollbar(orient="horizontal")
+        self.editor = Text(master=self.editor_frame, wrap=NONE, xscrollcommand=self.editor_scrollbar.set)
+        self.editor.pack(side="right", fill="both", expand=True)
+        for i in range(24):
+            self.editor.insert("end", f"\n")
+
+        linenums = TkLineNumbers(master=self.editor_frame, textwidget=self.editor, justify="center", colors=("#2197db", "#ffffff"), bd=0)
+        linenums.pack(fill="y", side="left")
+        self.editor.bind("<<Modified>>", lambda event: self.after_idle(linenums.redraw), add=True)
+
+        self.editor_scrollbar.pack(side="bottom", fill='x', expand=False)
+        self.editor_scrollbar.config(command=self.editor.xview)
 
         console_input = Entry(background="#fefefe")
         console_input.pack(fill='x', expand=False)
@@ -213,6 +262,25 @@ class MainGUI(tkinter.Tk):
         console.pack(fill='x', expand=False)
         console.tag_config('error', foreground="red")
 
+        def info_boxes_resize(event):
+            print("resize")
+            if self.error.winfo_exists():
+                print("error resize")
+                self.error.place(relwidth=1.0, relx=.5, y=int(self.editor.winfo_height() - self.info_height + 3),
+                                 anchor=CENTER)
+            if self.micro.winfo_exists():
+                print("micro resize")
+                self.micro.place(relwidth=1.0, relx=0, y=int(self.editor.winfo_height() - ((self.info_height + 3) / 3)))
+            if self.recording.winfo_exists():
+                print("recording resize")
+                self.recording.place(relwidth=1.0, relx=.5, y=int(self.editor.winfo_height() - self.info_height + 3),
+                                     anchor=CENTER)
+            if self.processing.winfo_exists():
+                print("processing resize")
+                self.processing.place(relwidth=1.0, relx=.5, y=int(self.editor.winfo_height() - self.info_height + 3),
+                                      anchor=CENTER)
+
+        self.editor.bind("<Configure>", info_boxes_resize)
 
         def editor_input_send(event=None):
             content = console_input.get()

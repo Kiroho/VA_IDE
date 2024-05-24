@@ -1,4 +1,5 @@
 import threading
+import traceback
 
 from faster_whisper import WhisperModel
 import pyaudio
@@ -6,14 +7,14 @@ import wave
 import os
 import time
 import audioop
-import Categorize as c
 def check_volume(data):
     rms = audioop.rms(data, 2)
     return rms
 
 class VoiceAssistant:
 
-    def __init__(self, owner):
+    def __init__(self, owner, tts_device="cuda", tts_compute_type="float32"):
+        self.model = None
         self.stop_all = False
         self.owner = owner
         self.start_time = 0.0
@@ -25,22 +26,39 @@ class VoiceAssistant:
         self.input_device_index = "0"
         self.temp_audio_file_path = "temp/temp_chunk.wav"
         self.temp_log_file_path = ""
-        self.volume_start_threshold = 1000
-        self.volume_stop_threshold = 500
-        self.recording_timeout = 2
+        self.volume_start_threshold = 1200
+        self.volume_stop_threshold = 700
+        self.recording_timeout = 0.5
 
-        self.tts_device = "cuda"
-        self.tts_compute_type = "float32"
-        print("Model stuff....\n")
-        # Comment out for testing
-        self.model = WhisperModel("medium", device=self.tts_device, compute_type=self.tts_compute_type)
-        print("Model stuff done!\n")
+        self.tts_device = tts_device
+        self.tts_compute_type = tts_compute_type
+
+    def configure_model(self):
+        print("Initialize....\n")
+        self.owner.create_processing_info("Initialize Voice Assistant...")
+        try:
+            self.model = WhisperModel("medium", device=self.tts_device, compute_type=self.tts_compute_type)
+        except Exception:
+            self.owner.stop_micro_on_info()
+            self.stop()
+            self.owner.va_on = False
+            self.owner.create_error_info("Error. Hardware Accelerator is not supported by hardware", timer=3000)
+            print("Initialization done!\n")
+        finally:
+            self.owner.stop_processing_info()
+        if not self.stop_all:
+            self.owner.create_error_info("Voice Assistant ready", color="light green", timer=2000)
+            print("Initialization Error\n")
+
+
 
     def stop(self):
         self.stop_all = True
 
     def start(self, microphone_id):
         self.stop_all = False
+        if not self.model:
+            self.configure_model()
         if microphone_id:
             self.input_device_index = microphone_id
             print(self.input_device_index)
@@ -48,7 +66,8 @@ class VoiceAssistant:
         # for i in range(self.py_audio.get_device_count()):
         #     print(self.py_audio.get_device_info_by_index(i))
         #     print(self.py_audio.get_device_info_by_index(i)["defaultSampleRate"])
-        self.main()
+        if not self.stop_all:
+            self.main()
 
     def bitstream_to_wave(self, frames, path):
         wf = wave.open(path, 'wb')
@@ -62,17 +81,22 @@ class VoiceAssistant:
         frames = []
         self.voice_time_start = time.time()
         print("recording:...\n")
+        self.owner.create_recording_info(text="Recording...")
         while not self.stop_all:
             data = stream.read(1024)
             frames.append(data)
             if check_volume(data) < self.volume_stop_threshold:
                 self.voice_time_end = time.time()
                 deltatime = self.voice_time_end - self.voice_time_start
+                print(deltatime)
                 if deltatime > self.recording_timeout:
                     self.start_time = time.time()
                     break
-        print("recording ended")
+            else:
+                self.voice_time_start = time.time()
         self.bitstream_to_wave(frames, self.temp_audio_file_path)
+        print("recording ended")
+        self.owner.stop_recording_info()
 
     def main(self):
         self.stop_all = False
@@ -86,33 +110,41 @@ class VoiceAssistant:
                 if check_volume(stream.read(1024)) > 1000:
                     self.recording(stream)
                     print("processing...")
+                    self.owner.create_processing_info("Processing...")
                     segments, info = self.model.transcribe(self.temp_audio_file_path, beam_size=5, language="de",
                                                            condition_on_previous_text=False)
                     text = ""
                     for segment in segments:
                         text += segment.text + " "
                         # print(segment.text)
-                    c.classify_text(text)
                     log += text + "\n"
                     print("processing done")
+                    self.owner.stop_processing_info()
 
                     if self.owner:
-                        print("Call owner")
+                        self.owner.temp_whole_sentence = text
+                        # print("Call owner")
                         self.owner.process_va_data(text)
 
                     self.end_time = time.time()
                     deltatime = self.end_time - self.start_time
-                    print("Procession Time: ")
-                    print(deltatime)
+                    print(f'Procession Time: {deltatime}')
                     os.remove(self.temp_audio_file_path)
         except OSError:
-            # Zu einer Pop Up Message machen
+            self.owner.create_error_info("Error. Starting Input Device Failed. Select a valid Input Device.")
+            self.owner.stop_micro_on_info()
+            self.owner.stop_processing_info()
             print("Error. Starting Input Device Failed. Choose a valid microphone.\n"
                   "This error can be cause by missing permissions.\n"
                   "Check your microphone's privacy settings.")
-            self.owner.va_on_off = False
+            self.owner.va_on = False
         except Exception:
-            self.owner.va_on_off = False
+            print("Some Error during recording")
+            self.owner.create_error_info("An Error occoured during recording. Stopping recording...")
+            self.owner.stop_micro_on_info()
+            self.owner.stop_processing_info()
+            traceback.print_exc()
+            self.owner.va_on = False
         finally:
             print("Stopping...")
             print("LOG: " + log)
