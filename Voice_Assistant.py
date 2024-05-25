@@ -25,10 +25,10 @@ class VoiceAssistant:
         self.py_audio = pyaudio.PyAudio()
         self.input_device_index = "0"
         self.temp_audio_file_path = "temp/temp_chunk.wav"
-        self.temp_log_file_path = ""
-        self.volume_start_threshold = 1200
-        self.volume_stop_threshold = 700
-        self.recording_timeout = 0.5
+        # self.temp_log_file_path = ""
+        # self.volume_start_threshold = 1200
+        # self.volume_stop_threshold = 700
+        # self.recording_timeout = 0.5
 
         self.tts_device = tts_device
         self.tts_compute_type = tts_compute_type
@@ -85,11 +85,11 @@ class VoiceAssistant:
         while not self.stop_all:
             data = stream.read(1024)
             frames.append(data)
-            if check_volume(data) < self.volume_stop_threshold:
+            if check_volume(data) < self.owner.sliders.get("stop"):
                 self.voice_time_end = time.time()
                 deltatime = self.voice_time_end - self.voice_time_start
                 print(deltatime)
-                if deltatime > self.recording_timeout:
+                if deltatime > self.owner.sliders.get("timer"):
                     self.start_time = time.time()
                     break
             else:
@@ -107,7 +107,7 @@ class VoiceAssistant:
                                         input_device_index=int(self.input_device_index), input=True,
                                         frames_per_buffer=1024)
             while not self.stop_all:
-                if check_volume(stream.read(1024)) > 1000:
+                if check_volume(stream.read(1024)) > self.owner.sliders.get("start"):
                     self.recording(stream)
                     print("processing...")
                     self.owner.create_processing_info("Processing...")

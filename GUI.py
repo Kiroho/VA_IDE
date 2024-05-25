@@ -11,6 +11,7 @@ import subprocess
 from Hardware_Accelerator import HardwareWindow
 from Microphone_Selection import MicrophoneWindow
 from Voice_Assistant import VoiceAssistant
+from VA_Config import VAConfigWindow
 import pyaudio
 import Categorize as c
 from tklinenums import TkLineNumbers
@@ -90,6 +91,7 @@ class MainGUI(tkinter.Tk):
         self.new_hardware_selected = False
         self.va_on = False
         self.va = None
+        self.sliders = {"start": 1200.0, "stop": 700.0, "timer": 1.0}
 
         def voice_assistant():
             if not self.va:
@@ -119,6 +121,9 @@ class MainGUI(tkinter.Tk):
         def select_microphone():
             check_devices()
             MicrophoneWindow(self)
+
+        def recording_settings():
+            VAConfigWindow(self)
 
         def check_devices():
             self.connected_devices = {}
@@ -216,7 +221,10 @@ class MainGUI(tkinter.Tk):
 
         def stop():
             console.insert(END, "ToDo: Implement Stop\n")
-            subprocess.Popen("taskkill /F /T /PID %i" % self.process.pid, shell=True)
+            try:
+                subprocess.Popen("taskkill /F /T /PID %i" % self.process.pid, shell=True)
+            except Exception:
+                pass
             print("__________________________________________")
 
         menu_bar = Menu(self)
@@ -230,6 +238,7 @@ class MainGUI(tkinter.Tk):
 
         option_bar = Menu(menu_bar, tearoff=0)
         option_bar.add_command(label="Microphone", command=select_microphone)
+        option_bar.add_command(label="Recording Settings", command=recording_settings)
         option_bar.add_command(label="Hardware Acceleration", command=select_hardware_accelerator)
         menu_bar.add_cascade(label="Options", menu=option_bar)
 
