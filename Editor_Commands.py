@@ -42,13 +42,19 @@ def check_tabs(editor, row):
     return count
 
 
-def get_previous_row(row):
+def get_relative_row(editor, row, offset=-1):
     try:
-        pre_row = row.split(".")[0] + ".0"
-        pre_row = float(pre_row) - 1
-        if pre_row < 1:
-            pre_row = 1.0
-        return str(pre_row)
+        new_row = row.split(".")[0] + ".0"
+        new_row = float(new_row) + offset
+        if new_row < 1:
+            new_row = 1.0
+            print("it's before 1")
+        total_rows = float(editor.index('end-1c').split('.')[0])
+        if new_row > total_rows:
+            new_row = total_rows
+            print("it's beyond END")
+        print(f'its: {new_row}')
+        return str(new_row)
     except Exception:
         return "0.0"
 
@@ -82,7 +88,7 @@ def check_for_function(text):
 def formate_function(editor, row, function_text):
     val = adjust_row(editor, row=row)
 
-    prev_row = get_previous_row(val)
+    prev_row = get_relative_row(editor, val)
     prev_row_text = editor.get(prev_row + " linestart", prev_row + " lineend")
     text = function_text + "\n\t"
     tabs_prev = check_tabs(editor, prev_row)
@@ -97,7 +103,7 @@ def formate_function(editor, row, function_text):
 def formate_non_function(editor, row, text):
     val = adjust_row(editor, row=row)
 
-    prev_row = get_previous_row(val)
+    prev_row = get_relative_row(editor, val)
     prev_row_text = editor.get(prev_row + " linestart", prev_row + " lineend")
     text = text
     tabs_prev = check_tabs(editor, prev_row)
@@ -109,18 +115,20 @@ def formate_non_function(editor, row, text):
     return text
 
 
-#____________________Editor Commands
+# Editor Commands_________________________
 
-def jump_to_row(editor, row=None):
+def jump_to_row(editor, owner, row=None):
     if row and isinstance(row, str):
         val = row.split(".")[0] + ".0"
         editor.mark_set("insert", val)
         # print(f'Jumped To: {val}')
+        owner.create_error_info("Command done", color="light green", timer=1000)
     else:
-        print("Jumped To: Error. No Row Recognized.")
+        # print("Jumped To: Error. No Row Recognized.")
+        owner.create_error_info("No Row Recognized.", color="orange", timer=2000)
 
 
-def copy(editor, row_start=None, row_end=None):
+def copy(editor, owner, row_start=None, row_end=None):
     if row_start and row_end:
         if isinstance(row_start, str) and isinstance(row_end, str):
             val_start = row_start.split(".")[0] + ".0"
@@ -132,6 +140,7 @@ def copy(editor, row_start=None, row_end=None):
         # print("Copied: No Rows selected. Copy marked instead.")
         if not get_selected_text(editor) == "":
             editor.clipboard_append(get_selected_text(editor))
+    owner.create_error_info("Command done", color="light green", timer=1000)
 
 
 def paste(owner, editor, row=None):
@@ -142,9 +151,10 @@ def paste(owner, editor, row=None):
     try:
         # print(f'Inserted at: {val}')
         editor.insert(val, editor.clipboard_get())
+        owner.create_error_info("Command done", color="light green", timer=1000)
     except (TclError, Exception):
         # print("Inserted at: Error, nothing to insert")
-        owner.create_error_info("Insert not possible. Clipboard is empty", color="orange")
+        owner.create_error_info("Insert not possible. Clipboard is empty", color="orange", timer=2000)
         pass
 
 
@@ -156,61 +166,102 @@ def delete(owner, editor, row_start=None, row_end=None):
             # print(f'Rows to delete are: {val_start} to {val_end}')
             # print(f'Deleted text: {editor.get(val_start, val_end)}')
             editor.delete(val_start + " linestart", val_end + " lineend")
-    elif row_start:
+            owner.create_error_info("Command done", color="light green", timer=1000)
+            return
+    if row_start:
         if isinstance(row_start, str):
             val_start = row_start.split(".")[0] + ".0"
             # print(f'Rows to delete are: {val_start}')
             # print(f'Deleted text: {editor.get(val_start)}')
             editor.delete(val_start + " linestart", val_start + " lineend")
-    else:
-        # print("Deleted: No Rows selected. Delete marked instead.")
-        if not get_selected_text(editor) == "":
-            try:
-                editor.delete(SEL_FIRST, SEL_LAST)
-            except (TclError, Exception):
-                # print(f'Deleted Text:')
-                owner.create_error_info("Nothing marked for Deletion.", color="orange")
-                pass
+            owner.create_error_info("Command done", color="light green", timer=1000)
+            return
+    # print("Deleted: No Rows selected. Delete marked instead.")
+    if not get_selected_text(editor) == "":
+        try:
+            editor.delete(SEL_FIRST, SEL_LAST)
+        except (TclError, Exception):
+            # print(f'Deleted Text:')
+            owner.create_error_info("Nothing marked for Deletion.", color="orange")
+            pass
 
 
-def insert_if_statement(editor, row=None, is_not="", x="x", y="", o="", then=True):
+def insert_if_statement(editor, owner, row=None, is_not=False, x=None, y=None, o=None, then=True):
     val = adjust_row(editor, row)
+    cursor = True
+    if x or y or o:
+        cursor = False
+        no = ""
+        if is_not:
+            no = "not "
+        if not x:
+            x = "x"
+        if not y:
+            y = "y"
+        if not o:
+            o = "=="
+        command = "if " + no + x + " " + o + " " + y + ":"
+    else:
+        command = "if  :"
 
-    command = "if " + x + o + y + ":"
-    if is_not:
-        command = "if not " + x + o + y + ":"
     command = formate_function(editor, row, command)
     if then:
         else_command = "else:"
         else_command = formate_function(editor, row, else_command)
         command = command + else_command
     editor.insert(val + " lineend", command)
+    if cursor:
+        set_cursor_position(editor, command=command, row=val, offset=2)
+
+    owner.create_error_info("Command done", color="light green", timer=1000)
 
 
-def insert_for(editor, row=None, range_s="1", range_e=None, range_o=None, in_each=None):
+# def insert_if_statement(editor, owner, row=None, is_not="", x="x", y="", o="", then=True):
+#     val = adjust_row(editor, row)
+#
+#     command = "if  :"
+#     if is_not:
+#         command = "if not  :"
+#     command = formate_function(editor, row, command)
+#     if then:
+#         else_command = "else:"
+#         else_command = formate_function(editor, row, else_command)
+#         command = command + else_command
+#     editor.insert(val + " lineend", command)
+#     set_cursor_position(editor, command=command, row=val, offset=2)
+#
+#     owner.create_error_info("Command done", color="light green", timer=1000)
+
+
+def insert_for(editor, owner, row=None, range_s="1", range_e=None, range_o=None, in_each=None):
     val = adjust_row(editor, row)
 
-    command = "for i in range(" + range_s + "):"
+    command = "for i in range(  ):"
     if in_each:
         command = "for i in " + in_each + ":"
-    elif range_e:
-        command = "for i in range(" + range_s + ", " + range_e + "):"
-        if range_o:
-            command = "for i in range(" + range_s + ", " + range_e + ", " + range_o + "):"
+    # elif range_e:
+    #     command = "for i in range(" + range_s + ", " + range_e + "):"
+    #     if range_o:
+    #         command = "for i in range(" + range_s + ", " + range_e + ", " + range_o + "):"
     command = formate_function(editor, row, command)
     editor.insert(val + " lineend", command)
+    set_cursor_position(editor, command=command, row=val, offset=3)
+    owner.create_error_info("Command done", color="light green", timer=1000)
 
 
-def insert_while(editor, row=None, is_not=False, x="x", y="y", o="=="):
+def insert_while(editor, owner, row=None,
+                 is_not=False, x="x", y="y", o="=="):
     val = adjust_row(editor, row)
-    command = "while " + x + o + y + ":"
+    command = "while  :"
     if is_not:
         command = "while not " + x + o + y + ":"
     command = formate_function(editor, row, command)
     editor.insert(val + " lineend", command)
+    set_cursor_position(editor, command=command, row=val, offset=2)
+    owner.create_error_info("Command done", color="light green", timer=1000)
 
 
-def insert_match(editor, *args, row=None, status="status"):
+def insert_match(editor, owner, *args, row=None, status="status"):
     val = adjust_row(editor, row)
 
     command = "match " + status + ":"
@@ -223,9 +274,10 @@ def insert_match(editor, *args, row=None, status="status"):
     end_command = formate_function(editor, row, end_command)
     command = command + end_command
     editor.insert(val + " lineend", command)
+    owner.create_error_info("Command done", color="light green", timer=1000)
 
 
-def insert_try(editor, row=None, excep="Exception", final=False):
+def insert_try(editor, owner, row=None, excep="Exception", final=False):
     val = adjust_row(editor, row)
 
     command = "try:"
@@ -238,30 +290,36 @@ def insert_try(editor, row=None, excep="Exception", final=False):
         final_command = formate_function(editor, row, final_command)
         command = command + final_command
     editor.insert(val + " lineend", command)
+    owner.create_error_info("Command done", color="light green", timer=1000)
 
 
-def insert_infinite_loop(editor, row=None, ):
+def insert_infinite_loop(editor, owner, row=None, ):
     val = adjust_row(editor, row)
     command = "while True:"
     command = formate_function(editor, row, command)
     editor.insert(val + " lineend", command)
+    owner.create_error_info("Command done", color="light green", timer=1000)
 
 
-def insert_print(editor, row=None, text=""):
+def insert_print(editor, owner, row=None, text=""):
     val = adjust_row(editor, row)
     command = "print(\"" + text + "\")"
     command = formate_non_function(editor, row, command)
     editor.insert(val + " lineend", command)
+    set_cursor_position(editor, command=command, row=val, offset=2, filter=")")
+    owner.create_error_info("Command done", color="light green", timer=1000)
 
 
-def insert_input(editor, row=None, variable="input_val", text="Input: "):
+def insert_input(editor, owner, row=None, variable="input_val", text="Input: "):
     val = adjust_row(editor, row)
     command = variable + " = input(\"" + text + "\")"
     command = formate_non_function(editor, row, command)
     editor.insert(val + " lineend", command)
+    set_cursor_position(editor, command=command, row=val, offset=2, filter=")")
+    owner.create_error_info("Command done", color="light green", timer=1000)
 
 
-def insert_timer(editor, row=None):
+def insert_timer(editor, owner, row=None):
     if not check_import(editor, "from timeit import default_timer as timer"):
         editor.insert("0.0", "from timeit import default_timer as timer\n")
     val = adjust_row(editor, row)
@@ -272,9 +330,10 @@ def insert_timer(editor, row=None):
     command_2 = formate_non_function(editor, row, command_2)
     command = command + command_2
     editor.insert(val + " lineend", command)
+    owner.create_error_info("Command done", color="light green", timer=1000)
 
 
-def insert_thread(editor, row=None, target="insert_function"):
+def insert_thread(editor, owner, row=None, target=""):
     if not check_import(editor, "import threading"):
         editor.insert("0.0", "import threading\n")
     val = adjust_row(editor, row)
@@ -282,17 +341,27 @@ def insert_thread(editor, row=None, target="insert_function"):
 
     command = "my_thread_" + str(number) + " = threading.Thread(target=" + target + ")\t\t#initializes the thread"
     command = formate_non_function(editor, row, command)
-
     command_2 = "my_thread_" + str(
         number) + ".daemon = True\t\t#kills the thread automatically once the main program get closed"
     command_2 = formate_non_function(editor, row, command_2)
-
     command_3 = "my_thread_" + str(number) + ".start()\t\t#starts the thread"
     command_3 = formate_non_function(editor, row, command_3)
-
     command = command + command_2 + command_3
-
     editor.insert(val + " lineend", command)
+    set_cursor_position(editor, command=command, row=val, offset=1, filter=")")
+    owner.create_error_info("Command done", color="light green", timer=1000)
+
+
+#internal functions________________________________________
+
+def set_cursor_position(editor, command, row, offset, filter=":"):
+    cursor_row = str(float(row) + 1)
+    cursor_row = cursor_row.split(".")[0]
+    cursor_pos = command.split(filter)[0]
+    cursor_pos = str(len(cursor_pos) - offset)
+    print(len(command))
+    print(cursor_pos)
+    editor.mark_set("insert", cursor_row + "." + cursor_pos)
 
 
 def check_import(editor, wanted_import):

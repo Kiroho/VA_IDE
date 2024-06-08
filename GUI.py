@@ -14,12 +14,12 @@ from Voice_Assistant import VoiceAssistant
 from VA_Config import VAConfigWindow
 import pyaudio
 import Categorize as c
+import Editor_Commands as e
 from tklinenums import TkLineNumbers
 
 
 class MainGUI(tkinter.Tk):
     def process_va_data(self, data):
-        print(data)
         c.classify_text(self, self.editor, data)
 
     #info pop ups
@@ -55,9 +55,14 @@ class MainGUI(tkinter.Tk):
 
     def create_error_info(self, text="", color="red", timer=3000):
         img = PhotoImage()
-        self.error = Label(master=self.editor, text=text, image=img, compound=CENTER, font=('', self.info_text_size),
-                           bg=color, width=self.winfo_width(), height=self.info_height)
-        self.error.place(relx=.5, y=int(self.editor.winfo_height() - self.info_height + 3), anchor=CENTER)
+        self.error = Label(master=self.editor, text=text,
+                           image=img, compound=CENTER,
+                           font=('', self.info_text_size),
+                           bg=color, width=self.winfo_width(),
+                           height=self.info_height)
+        self.error.place(relx=.5, y=int(self.editor.winfo_height()
+                                        - self.info_height + 3)
+                         , anchor=CENTER)
         self.after(timer, self.error.destroy)
 
     def set_hardware_accelerator(self):
@@ -89,6 +94,7 @@ class MainGUI(tkinter.Tk):
         self.connected_devices = {}
         self.hardware_accelerator = ["cuda", "float32"]
         self.new_hardware_selected = False
+        self.original_text_tuple_list = []
         self.va_on = False
         self.va = None
         self.sliders = {"start": 1200.0, "stop": 700.0, "timer": 1.0}
@@ -206,26 +212,22 @@ class MainGUI(tkinter.Tk):
 
         def run_code():
             save()
-            # command = f'python{file_path}'
-            self.process = subprocess.Popen(self.file_path, bufsize=0, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+            self.process = subprocess.Popen(self.file_path, bufsize=0,
+                                            stdin=subprocess.PIPE,
+                                            stdout=subprocess.PIPE,
                                             stderr=subprocess.PIPE, shell=True)
-            # output, error = self.process.communicate()
-            # console.insert(END, output.decode('utf-8'))
-            # console.insert(END, error.decode('utf-8'))
-            # print(output)
-            # print(error)
-            # print(self.file_path)
             o = threading.Thread(target=read_output)
             o.daemon = True
             o.start()
 
+
         def stop():
-            console.insert(END, "ToDo: Implement Stop\n")
             try:
-                subprocess.Popen("taskkill /F /T /PID %i" % self.process.pid, shell=True)
+                subprocess.Popen("taskkill /F /T /PID %i" % self.process.pid,
+                                 shell=True)
             except Exception:
                 pass
-            print("__________________________________________")
+            # print("__________________________________________")
 
         menu_bar = Menu(self)
         file_bar = Menu(menu_bar, tearoff=0)
@@ -252,14 +254,17 @@ class MainGUI(tkinter.Tk):
         self.editor_frame.pack(side="top", fill="both", expand=True)
 
         self.editor_scrollbar = Scrollbar(orient="horizontal")
-        self.editor = Text(master=self.editor_frame, wrap=NONE, xscrollcommand=self.editor_scrollbar.set)
+        self.editor = Text(master=self.editor_frame, wrap=NONE, xscrollcommand=self.editor_scrollbar.set, undo=True, autoseparators=True, maxundo=-1)
         self.editor.pack(side="right", fill="both", expand=True)
         for i in range(24):
             self.editor.insert("end", f"\n")
 
-        linenums = TkLineNumbers(master=self.editor_frame, textwidget=self.editor, justify="center", colors=("#2197db", "#ffffff"), bd=0)
+        linenums = TkLineNumbers(master=self.editor_frame,
+                                 textwidget=self.editor, justify="center",
+                                 colors=("#2197db", "#ffffff"), bd=0)
         linenums.pack(fill="y", side="left")
-        self.editor.bind("<<Modified>>", lambda event: self.after_idle(linenums.redraw), add=True)
+        self.editor.bind("<Return>", lambda event: self.after_idle(linenums.redraw), add=True)
+        self.editor.bind("<BackSpace>", lambda event: self.after_idle(linenums.redraw), add=True)
 
         self.editor_scrollbar.pack(side="bottom", fill='x', expand=False)
         self.editor_scrollbar.config(command=self.editor.xview)
@@ -301,6 +306,54 @@ class MainGUI(tkinter.Tk):
             console_input.delete(0, END)
 
         console_input.bind('<Return>', editor_input_send)
+
+        def editor_set_indentation(event=None):
+            row = e.get_cursor_row(self.editor)
+            row = e.adjust_row(self.editor, row=row)
+            row = e.get_relative_row(self.editor, row, -1)
+            current_row_text = self.editor.get(row + " linestart", row + " lineend")
+            indent = ""
+            tabs_row = e.check_tabs(self.editor, row)
+            for j in range(0, tabs_row):
+                indent = "\t" + indent
+            if e.check_for_function(current_row_text):
+                indent = "\t" + indent
+            indent = indent
+            next_row = e.get_relative_row(self.editor, row, 1)
+            print(f'next row: {next_row}.')
+            self.editor.insert(next_row + " lineend", indent)
+            print(f'indents:{indent}.')
+            print(f'Cursor Row: {self.editor.index(INSERT)}')
+
+        self.editor.bind('<KeyRelease-Return>', editor_set_indentation)
+
+        def editor_set_additional_symbols(event):
+            add_char = ""
+            match event.char:
+                case '(':
+                    add_char = ")"
+                    print("Its a (")
+                case '{':
+                    add_char = "}"
+                    print("Its a  {")
+                case '[':
+                    add_char = "]"
+                    print("Its a [")
+                case '\"':
+                    add_char = "\""
+                    print("Its a \"")
+                case '\'':
+                    add_char = "\'"
+                    print("Its a \'")
+            self.editor.insert(self.editor.index(INSERT), add_char)
+            self.editor.mark_set("insert", self.editor.index(INSERT) + "-1c")
+            print(f'pressed symbols: {event.char}')
+
+        self.editor.bind('<KeyRelease-(>', editor_set_additional_symbols)
+        self.editor.bind('<KeyRelease-{>', editor_set_additional_symbols)
+        self.editor.bind('<KeyRelease-[>', editor_set_additional_symbols)
+        self.editor.bind('<KeyRelease-\">', editor_set_additional_symbols)
+        self.editor.bind('<KeyRelease-\'>', editor_set_additional_symbols)
 
         def input_def(content):
             try:

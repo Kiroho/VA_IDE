@@ -1,4 +1,13 @@
- Hallo, hallo. 
- Hallo? 
-
- Hallo. 
+ Ich erstelle eine F-Abfrage mit A größer gleich 5 in Zeile 17. 
+ Vielen Dank für's Zuhören! 
+ SWISS TXT AG, 2020 
+ Erstelle eine Impfabfrage. 
+ Ich erstelle eine IF-Abfrage in Zeile 3. 
+ für Frage A, Grüße und B. 
+ Erstelle eine IF-Abfrage A größer B. 
+ Copyright WDR 2021 
+ an der Stelle eine 11er Frage A, nicht 5. 
+ Ich stelle eine F-Abfrage. A nicht gleich 5. 
+ Erstelle eine YfW-Frage. A nicht kleiner, gleich 3 in Zeile 7. 
+ Erstelle eine Abfrage. 
+ Vielen Dank für's Zuschauen! 

@@ -43,12 +43,12 @@ class VoiceAssistant:
             self.stop()
             self.owner.va_on = False
             self.owner.create_error_info("Error. Hardware Accelerator is not supported by hardware", timer=3000)
-            print("Initialization done!\n")
+            print("Initialization Error.\n")
         finally:
             self.owner.stop_processing_info()
         if not self.stop_all:
             self.owner.create_error_info("Voice Assistant ready", color="light green", timer=2000)
-            print("Initialization Error\n")
+            print("Initialization Done!\n")
 
 
 
@@ -104,14 +104,15 @@ class VoiceAssistant:
         log = ""
         try:
             stream = self.py_audio.open(format=pyaudio.paInt16, channels=1, rate=16000,
-                                        input_device_index=int(self.input_device_index), input=True,
-                                        frames_per_buffer=1024)
+                                        input_device_index=int(self.input_device_index)
+                                        , input=True, frames_per_buffer=1024)
             while not self.stop_all:
                 if check_volume(stream.read(1024)) > self.owner.sliders.get("start"):
                     self.recording(stream)
                     print("processing...")
                     self.owner.create_processing_info("Processing...")
-                    segments, info = self.model.transcribe(self.temp_audio_file_path, beam_size=5, language="de",
+                    segments, info = self.model.transcribe(self.temp_audio_file_path,
+                                                           beam_size=5, language="de",
                                                            condition_on_previous_text=False)
                     text = ""
                     for segment in segments:
@@ -122,8 +123,6 @@ class VoiceAssistant:
                     self.owner.stop_processing_info()
 
                     if self.owner:
-                        self.owner.temp_whole_sentence = text
-                        # print("Call owner")
                         self.owner.process_va_data(text)
 
                     self.end_time = time.time()

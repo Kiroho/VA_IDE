@@ -32,10 +32,12 @@ class VAConfigWindow(Toplevel):
 
         volume_stop_frame = Frame(self)
         volume_stop_frame.pack(side="top")
-        stop_volume = Scale(master=volume_stop_frame, from_=0, to=2000, resolution=50.0, length=150, orient=HORIZONTAL)
+        stop_volume = Scale(master=volume_stop_frame, from_=0, to=2000,
+                            resolution=50.0, length=150, orient=HORIZONTAL)
         stop_volume.set(self.master.sliders.get("stop"))
         stop_volume.pack(side="right", padx=10)
-        volume_stop_label = Label(master=volume_stop_frame, text="Deactivation Volume: ")
+        volume_stop_label = Label(master=volume_stop_frame,
+                                  text="Deactivation Volume: ")
         volume_stop_label.pack(side="right")
 
         timeout_frame = Frame(self)
