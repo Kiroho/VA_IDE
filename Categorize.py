@@ -22,7 +22,7 @@ if_keywords = ['ifanweis', 'if', 'anweis', 'fanweis', 'abfrag', 'fabfrag', 'öfa
 for_keywords = ['vorschleif', 'vorschlaf', 'vorschneif', 'vorschrift', 'bohrschleif', 'for', 'forschleife']
 
 while_keywords = ['weilschleif', 'wildschleif', 'waldschleif', 'whileschleif', 'wireschraub', 'weilschlauf',
-                  'wireschleif', 'waltschleif', 'while']
+                  'wireschleif', 'waltschleif', 'while', "wallschleif", "wileschleif"]
 
 switch_keywords = ['switch', 'switchcas', 'witch', 'wich', 'hitch', 'match', 'cas', 'status']
 
@@ -43,22 +43,21 @@ snowball = SnowballStemmer("german")
 
 def preprocess_text(owner, text):
     if len(text) == 0:
-        return "0"
+        return ["0"]
     #lowercasing
     text = text.lower()
     original_text_list = text.split()
-    original_text_list[-1] = original_text_list[-1].strip(string.punctuation)
+    original_text_list[-1] = original_text_list[-1].strip(
+        string.punctuation)
     print(f'Original text: {text}')
-
-
     #remove special chars stopwords and tokenize
-    forbidden_chars = [".", ",", ";", ":", "!", "?", "_", "-", "(", ")", "\"", "\'"]
+    forbidden_chars = [".", ",", ";", ":", "!", "?", "_",
+                       "-", "(", ")", "\"", "\'"]
     for word in forbidden_chars:
         text = text.replace(word, "")
-    # print(f'Text ohne Sonderzeichn: {text}')
-    text = text.strip(string.punctuation)
+    # print(f'Text ohne Sonderzeichen: {text}')
+    # text = text.strip(string.punctuation)
     text_list = text.split()
-
     #stemming
     text_list = [snowball.stem(word) for word in text_list]
     print(f'Verarbeiteter text: {text_list}')
@@ -72,6 +71,9 @@ def preprocess_text(owner, text):
 
 def classify_text(owner, editor, text):
     text_list = preprocess_text(owner, text)
+    if(text_list[0] == "0"):
+        print("Category Not Found")
+        owner.create_error_info("Command not found.", color="orange", timer=2000)
 
     # print("Result is:")
     if any(word in text_list for word in jump_to_keywords):
@@ -115,7 +117,8 @@ def classify_text(owner, editor, text):
     elif any(word in text_list for word in while_keywords):
         # print("while_keywords ")
         row = f.find_one_row(text_list)
-        e.insert_while(editor, owner, row=row)
+        x, y, o, is_not = f.if_extraction(owner.original_text_tuple_list)
+        e.insert_while(editor, owner, row=row, x=x, y=y, o=o, is_not=is_not)
     elif any(word in text_list for word in switch_keywords):
         # print("switch_keywords")
         row = f.find_one_row(text_list)

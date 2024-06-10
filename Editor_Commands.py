@@ -216,23 +216,6 @@ def insert_if_statement(editor, owner, row=None, is_not=False, x=None, y=None, o
     owner.create_error_info("Command done", color="light green", timer=1000)
 
 
-# def insert_if_statement(editor, owner, row=None, is_not="", x="x", y="", o="", then=True):
-#     val = adjust_row(editor, row)
-#
-#     command = "if  :"
-#     if is_not:
-#         command = "if not  :"
-#     command = formate_function(editor, row, command)
-#     if then:
-#         else_command = "else:"
-#         else_command = formate_function(editor, row, else_command)
-#         command = command + else_command
-#     editor.insert(val + " lineend", command)
-#     set_cursor_position(editor, command=command, row=val, offset=2)
-#
-#     owner.create_error_info("Command done", color="light green", timer=1000)
-
-
 def insert_for(editor, owner, row=None, range_s="1", range_e=None, range_o=None, in_each=None):
     val = adjust_row(editor, row)
 
@@ -249,28 +232,41 @@ def insert_for(editor, owner, row=None, range_s="1", range_e=None, range_o=None,
     owner.create_error_info("Command done", color="light green", timer=1000)
 
 
-def insert_while(editor, owner, row=None,
-                 is_not=False, x="x", y="y", o="=="):
+def insert_while(editor, owner, row=None, is_not=False, x=None, y=None, o=None):
     val = adjust_row(editor, row)
-    command = "while  :"
-    if is_not:
-        command = "while not " + x + o + y + ":"
+    cursor = True
+    if x or y or o:
+        cursor = False
+        no = ""
+        if is_not:
+            no = "not "
+        if not x:
+            x = "x"
+        if not y:
+            y = "y"
+        if not o:
+            o = "=="
+        command = "while " + no + x + " " + o + " " + y + ":"
+    else:
+        command = "while  :"
     command = formate_function(editor, row, command)
     editor.insert(val + " lineend", command)
-    set_cursor_position(editor, command=command, row=val, offset=2)
+    if cursor:
+        set_cursor_position(editor, command=command, row=val, offset=2)
+
     owner.create_error_info("Command done", color="light green", timer=1000)
 
 
 def insert_match(editor, owner, *args, row=None, status="status"):
     val = adjust_row(editor, row)
 
-    command = "match " + status + ":"
+    command = "match " + status + " :"
     command = formate_function(editor, row, command)
     for arg in args:
         case_command = "case " + arg + ":"
         case_command = formate_function(editor, row, case_command)
         command = command + case_command
-    end_command = "case _:"
+    end_command = "\tcase _:"
     end_command = formate_function(editor, row, end_command)
     command = command + end_command
     editor.insert(val + " lineend", command)

@@ -4,14 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="8e1cacb9-5e11-485c-acc1-077f87b5ad70" name="Changes" comment="Added confirmation messages, cursor now jumps to important positions after a command is accomplished, added proper comments">
+    <list default="true" id="8e1cacb9-5e11-485c-acc1-077f87b5ad70" name="Changes" comment="added entity extraction to if query. reworked text preprocessing. Something else I forgot.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Categorize.py" beforeDir="false" afterPath="$PROJECT_DIR$/Categorize.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Editor_Commands.py" beforeDir="false" afterPath="$PROJECT_DIR$/Editor_Commands.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Feature_Extraction.py" beforeDir="false" afterPath="$PROJECT_DIR$/Feature_Extraction.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/GUI.py" beforeDir="false" afterPath="$PROJECT_DIR$/GUI.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/VA_Config.py" beforeDir="false" afterPath="$PROJECT_DIR$/VA_Config.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Voice_Assistant.py" beforeDir="false" afterPath="$PROJECT_DIR$/Voice_Assistant.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/temp/log.txt" beforeDir="false" afterPath="$PROJECT_DIR$/temp/log.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -208,7 +205,15 @@
       <option name="project" value="LOCAL" />
       <updated>1716608091638</updated>
     </task>
-    <option name="localTasksCounter" value="12" />
+    <task id="LOCAL-00012" summary="added entity extraction to if query. reworked text preprocessing. Something else I forgot.">
+      <option name="closed" value="true" />
+      <created>1717888833768</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1717888833768</updated>
+    </task>
+    <option name="localTasksCounter" value="13" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -222,6 +227,7 @@
     <MESSAGE value="added text preprocessing and text classification" />
     <MESSAGE value="fixed timer for recording. added pop up messages. added hardware accelerator configs." />
     <MESSAGE value="added voice assistant config." />
-    <option name="LAST_COMMIT_MESSAGE" value="added voice assistant config." />
+    <MESSAGE value="added entity extraction to if query. reworked text preprocessing. Something else I forgot." />
+    <option name="LAST_COMMIT_MESSAGE" value="added entity extraction to if query. reworked text preprocessing. Something else I forgot." />
   </component>
 </project>
